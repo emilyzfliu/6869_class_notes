@@ -1,0 +1,85 @@
+\documentclass{article}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+\usepackage[english]{babel}
+
+% Set page size and margins
+% Replace `letterpaper' with`a4paper' for UK/EU standard size
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\title{6.869 Review Notes}
+\author{Emily Liu}
+
+\begin{document}
+\maketitle
+
+\section{Introduction to Computer Vision}
+
+\subsection*{Why is vision hard?}
+The problem of computer vision is one of perception versus measurement. Measurement is recording numerical information from an image, and perception is to infer broader context from an image. Computers can easily achieve measurement tasks, but struggle with perception (especially human-level perception). One example is depth processing. Humans will infer that farther away objects are smaller and will perceive objects in the background as relatively larger than objects of the same size on the image in the foreground. However, a computer will register the objects as the same size.
+
+\subsection*{A simple visual system}
+We consider the task of inferring the 3D structure of blocks in a system with orthographic projection (a simplifying assumption meaning that all parallel lines in the image projection are also parallel in the real world). More concretely, our goal is to recover the $(X, Y, Z)$ real world coordinates using the input image coordinates $(x, y)$.
+
+\subsubsection*{Edge detection}
+Specifically, we want to detect edges which we can do by looking at large changes in intensity. This is called the image gradient and is given by
+\begin{align*}
+    \nabla I(x, y) &= \left(\frac{\partial I}{\partial x}, \frac{\partial I}{\partial y}\right)\\
+    \frac{\partial I}{\partial x} &= I(x, y) - I(x-1, y)
+\end{align*}
+Since we work with discrete values, we take the intensity difference to be the gradient.
+\\
+\\
+The edge strength is given by $E(x, y) = |\nabla I(x, y)|$. The edge orientation is given to be $\theta (x, y) = \arctan \frac{\partial I / \partial y}{\partial I / \partial x}$ and the edge normal is $n = \frac{\nabla I}{|\nabla I|}$.
+
+\subsubsection*{Edge classification}
+There are three types of edges: Occlusion edges occur when the outline of an object blocks the rest of it and is a depth discontinuity. Contact edges occur when the object is in contact with the ground. Change of orientation edges occur along edges of the polyhedron.
+\\
+\\
+To start detecting the edges, we need to first separate the figure from the ground, which we can do with an intensity reading (the ground is white). By the world setup, all points with $Y(x, y)$ value 0 are the ground.
+\\
+\\
+Occlusion edges are owned by the foreground, meaning that all topmost edges are occlusion edges. Therefore, the first edge you encounter going from the top of the image will be an occlusion edge.
+\\
+\\
+Since contact edges are on the ground, all contact edges will have $Y(x, y) = 0$.
+\\
+\\
+We also classify vertical and horizontal edges. All vertical edges in the real world will register as vertical edges in the image, and therefore all non-vertical edges in the image are horizontal in the real world. If a line is vertical, the $z$ coordinates stay the same while the $y$ coordinates change ($\frac{dY}{dy} = \frac{1}{\cos \theta}$). In horizontal edges, $Y$ is constant. All faces are flat, which means all second derivatives with respect to $Y$ are zero.
+
+\section{Cameras and Image Formation}
+Images are not visible on all surfaces because there are too many sources of light input, meaning all the images interfere with each other and result in a blank surface. By this logic, letting light in through a small hole will enable the projection of an image. This is the setup behind a pinhole camera.
+\subsection*{Perspective projection in images}
+The x and y coordinates in an image are related to those in the real world by a simple ratio
+\begin{align*}
+    x &= f X/Z \\
+    y &= f Y/Z
+\end{align*}
+where $Z$ is the distance from the object to the pinhole and f is the distance from the image to the pinhole.
+\\
+\\
+The projection of lines is similar:
+\begin{align*}
+    X(t) &= X_0 + at \\
+    Y(t) &= Y_0 + bt \\
+    Z(t) &= Z_0 + ct \\
+    x(t) &= f\left(\frac{X_0 + at}{Z_0 + ct}\right)\\
+    y(t) &= f\left(\frac{Y_0 + bt}{Z_0 + ct}\right)
+\end{align*}
+
+We observe that as we let $t$ go to infinity, the $x$ and $y$ lines converge to constant values. These are called vanishing points.
+\\
+\\
+When doing a head on projection, we assume the $Y$ and $Z$ do not vary, meaning there is only a vanishing point at $x$.
+\subsection*{Lenses}
+The issue with pinhole cameras is that there is a tradeoff between brightness and resolution. A small aperture will lead to a clear image but very dark due to there not being enough signal. A large aperture will let in more light but result in a blurrier image. Lenses enable us to use a large aperture and obtain a clear image because the lens redirects the light rays to a focal point.
+\\
+\\
+Snells law states that $n_1 \sin \alpha_1 = n_2 \sin \alpha_2$ where $n$ is the index of refraction and $\alpha$ is the angle from the vertical. At small angles, this simplifies to $n_1 \alpha_1 = n_2 \alpha_2$ which we can use to derive the Lensmaker's formula $\frac{1}{a} + \frac{1}{b} = \frac{1}{f}$ where $a$ is the object distance, $b$ is the image distance, and $f$ is the focal length. It also follows that the lens must be spherical/parabolic.
+\end{document}
